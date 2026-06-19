@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\gharb\\\\Desktop\\\\Pulse_KG\" -Force)",
+      "Bash(Select-Object Name, Mode)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(Get-ChildItem -Recurse \"c:\\\\Users\\\\gharb\\\\Desktop\\\\Pulse_KG\\\\migrations\")",
+      "Bash(Select-Object FullName, Length)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\gharb\\\\Desktop\\\\Pulse_KG\" -Recurse -Depth 2)",
+      "Bash(Select-Object FullName)",
+      "Bash(python3 -c \"from app.pipelines import build_pipeline_context; print\\('Import successful'\\)\")"
+    ]
+  }
+}

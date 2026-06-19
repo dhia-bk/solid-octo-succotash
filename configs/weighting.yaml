@@ -1,0 +1,59 @@
+membership_activity_weight:
+  enabled: true
+  version: v1
+  output_range: [0.0, 1.0]
+
+  inputs:
+    fixture_participation_count:
+      enabled: true
+      weight: 0.40
+    chat_message_count:
+      enabled: true
+      weight: 0.25
+    recency_days_since_last_activity:
+      enabled: true
+      weight: 0.20
+    membership_tenure_days:
+      enabled: true
+      weight: 0.10
+    moderator_bonus:
+      enabled: true
+      weight: 0.05
+
+  normalization:
+    fixture_participation_count:
+      method: min_max
+      min: 0
+      max: 100
+    chat_message_count:
+      method: min_max
+      min: 0
+      max: 200
+    recency_days_since_last_activity:
+      method: inverse_min_max
+      min: 0
+      max: 60
+    membership_tenure_days:
+      method: capped_min_max
+      min: 0
+      max: 365
+
+  thresholds:
+    active_edge_min: 0.50
+    strong_edge_min: 0.75
+
+  defaults:
+    missing_chat_message_count: 0
+    missing_recency_days_since_last_activity: 999
+    missing_membership_tenure_days: 0
+    missing_moderator_bonus: 0
+
+team_affinity_weight:
+  enabled: true
+  version: v1
+  output_range: [0.0, 1.0]
+
+prediction_confidence_weight:
+  enabled: true
+  version: v1
+  output_range: [0.0, 1.0]

@@ -1,0 +1,53 @@
+inference:
+  enabled: true
+  version: v1
+
+  outputs:
+    write_inferred_topic: true
+    write_inferred_sentiment: true
+    write_confidence: true
+    write_source_tribe: true
+
+  policies:
+    never_overwrite_observed_truth: true
+    only_infer_for_unlabeled_users: true
+    require_active_membership_edge: true
+
+  topic_inference:
+    enabled: true
+    min_tribe_size: 10
+    min_labeled_users: 5
+    min_dominant_label_share: 0.60
+    min_confidence: 0.70
+
+  sentiment_inference:
+    enabled: true
+    min_tribe_size: 10
+    min_labeled_users: 5
+    min_dominant_label_share: 0.65
+    min_confidence: 0.75
+
+  confidence_scoring:
+    formula: weighted_vote
+    components:
+      dominant_label_share_weight: 0.50
+      tribe_size_weight: 0.20
+      label_count_weight: 0.20
+      edge_strength_weight: 0.10
+
+  evaluation:
+    enabled: true
+    holdout_ratio: 0.20
+    minimum_precision: 0.75
+    minimum_recall: 0.60
+
+  temporal_eras:
+    - name: pre_launch
+      start: "2020-01-01"
+      end: "2025-03-01"
+    - name: launch
+      start: "2025-03-01"
+      end: "2025-10-01"
+    - name: current
+      start: "2025-10-01"
+      end: null

@@ -1,0 +1,39 @@
+gds:
+  enabled: true
+
+  projection:
+    graph_name: hidden_tribes
+    drop_existing_before_create: true
+    relationship_weight_property: shared_league_weight
+
+  membership_filter:
+    relationship_type: MEMBER_OF
+    activity_weight_min: 0.50
+
+  node_projection:
+    labels:
+      - User
+
+  edge_projection:
+    mode: shared_private_league_user_user
+    undirected: true
+
+  leiden:
+    enabled: true
+    write_property: tribe_id
+    include_intermediate_communities: false
+    concurrency: 4
+
+  pagerank:
+    enabled: true
+    write_property: pagerank_score
+    damping_factor: 0.85
+    max_iterations: 20
+
+  memory_estimation:
+    enabled: true
+    fail_if_exceeds_available_memory: true
+
+  writeback:
+    enabled: true
+    write_run_metadata: true

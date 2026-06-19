@@ -1,0 +1,45 @@
+serving:
+  enabled: true
+
+  materializations:
+    user_profile_summary:
+      enabled: true
+      refresh_mode: after_sync
+    tribe_summary:
+      enabled: true
+      refresh_mode: after_analytics
+    persona_history_summary:
+      enabled: true
+      refresh_mode: after_sync
+    inferred_labels_summary:
+      enabled: true
+      refresh_mode: after_inference
+    notification_features:
+      enabled: true
+      refresh_mode: scheduled
+    content_features:
+      enabled: true
+      refresh_mode: scheduled
+
+  outputs:
+    persist_to_neo4j: true
+    persist_to_metadata_db: true
+
+  api_views:
+    user_profile:
+      enabled: true
+    tribe_profile:
+      enabled: true
+    persona_timeline:
+      enabled: true
+    inferred_insights:
+      enabled: true
+    notification_summary:
+      enabled: true
+    content_summary:
+      enabled: true
+
+  freshness:
+    max_sync_age_minutes: 60
+    max_analytics_age_hours: 24
+    max_inference_age_hours: 24

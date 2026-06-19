@@ -1,0 +1,134 @@
+defaults:
+  mode: graph_enrichment
+
+tables:
+  app_users:
+    mode: excluded
+  dim_ai_articles:
+    mode: graph_enrichment
+  dim_avatars:
+    mode: graph_enrichment
+  dim_badges:
+    mode: graph_enrichment
+  dim_chat_conversations_mysql:
+    mode: graph_enrichment
+  dim_chat_direct_pairs:
+    mode: graph_enrichment
+  dim_chatbot_conversations:
+    mode: graph_enrichment
+  dim_comments:
+    mode: graph_core
+  dim_discussions:
+    mode: graph_enrichment
+  dim_fixture_polls_enhanced:
+    mode: graph_enrichment
+  dim_fixtures:
+    mode: graph_core
+  dim_influencer_leagues:
+    mode: graph_enrichment
+  dim_leagues:
+    mode: graph_core
+  dim_lms_competitions:
+    mode: graph_enrichment
+  dim_news:
+    mode: graph_enrichment
+  dim_notification_content:
+    mode: serving_only
+  dim_notification_preferences:
+    mode: serving_only
+  dim_partner_reward_catalog:
+    mode: graph_enrichment
+  dim_posts:
+    mode: graph_core
+  dim_prediction_discussions:
+    mode: graph_enrichment
+  dim_private_league_members:
+    mode: graph_core
+  dim_private_league_themes:
+    mode: graph_enrichment
+  dim_private_leagues:
+    mode: graph_core
+  dim_questions:
+    mode: graph_enrichment
+  dim_questions_enhanced:
+    mode: graph_enrichment
+  dim_quiz_questions_enhanced:
+    mode: graph_enrichment
+  dim_quizzes:
+    mode: graph_enrichment
+  dim_subscription_products:
+    mode: graph_enrichment
+  dim_super6_round_fixtures:
+    mode: graph_enrichment
+  dim_super6_rounds:
+    mode: graph_enrichment
+  dim_tags:
+    mode: graph_enrichment
+  dim_teams:
+    mode: graph_core
+  dim_teams_enhanced:
+    mode: graph_enrichment
+  dim_users:
+    mode: graph_core
+  dim_voucher_catalog:
+    mode: graph_enrichment
+
+  fct_awards_and_achievements:
+    mode: graph_enrichment
+  fct_chatbot_messages:
+    mode: graph_enrichment
+  fct_chatbot_tool_calls:
+    mode: graph_enrichment
+  fct_coin_transactions:
+    mode: graph_enrichment
+  fct_content_engagement_daily:
+    mode: analytics_only
+  fct_daily_metrics:
+    mode: analytics_only
+  fct_discussion_events:
+    mode: graph_enrichment
+  fct_financials:
+    mode: analytics_only
+  fct_heatmap_events:
+    mode: analytics_only
+  fct_moderation_events:
+    mode: graph_enrichment
+  fct_notification_content_daily:
+    mode: serving_only
+  fct_partner_reward_inventory:
+    mode: graph_enrichment
+  fct_partner_reward_redemptions:
+    mode: graph_enrichment
+  fct_prediction_duels:
+    mode: graph_enrichment
+  fct_predictions:
+    mode: graph_core
+  fct_retention_cohorts:
+    mode: analytics_only
+  fct_sentiment:
+    mode: graph_core
+  fct_subscription_lifecycle:
+    mode: graph_enrichment
+  fct_super6_participants:
+    mode: graph_enrichment
+  fct_team_affinity:
+    mode: graph_enrichment
+  fct_team_daily_growth:
+    mode: analytics_only
+  fct_topics:
+    mode: graph_core
+  fct_user_activities:
+    mode: graph_enrichment
+  fct_user_behavior:
+    mode: graph_core
+  fct_user_notification_stats:
+    mode: serving_only
+  fct_user_rating_history:
+    mode: graph_enrichment
+  fct_user_sessions:
+    mode: graph_enrichment
+  fct_voucher_purchases:
+    mode: graph_enrichment
+
+  jct_notification_recipients:
+    mode: serving_only

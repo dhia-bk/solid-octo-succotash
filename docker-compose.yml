@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  metadata-db:
+    image: postgres:16
+    container_name: project-pulse-metadata-db
+    environment:
+      POSTGRES_DB: project_pulse_metadata
+      POSTGRES_USER: project_pulse
+      POSTGRES_PASSWORD: project_pulse
+    ports:
+      - "5432:5432"
+    volumes:
+      - metadata_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U project_pulse -d project_pulse_metadata"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: python:3.12-slim
+    container_name: project-pulse-api
+    working_dir: /app
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "pip install --upgrade pip &&
+             pip install -e '.[dev]' &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    ports:
+      - "8000:8000"
+    depends_on:
+      metadata-db:
+        condition: service_healthy
+
+  worker:
+    image: python:3.12-slim
+    container_name: project-pulse-worker
+    working_dir: /app
+    env_file:
+      - .env
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "pip install --upgrade pip &&
+             pip install -e '.[dev]' &&
+             python scripts/run_incremental_sync.py"
+    depends_on:
+      metadata-db:
+        condition: service_healthy
+
+volumes:
+  metadata_db_data:

@@ -1,0 +1,29 @@
+app:
+  env: dev
+  debug: true
+
+api:
+  cors:
+    enabled: true
+    allow_origins: ["*"]
+
+security:
+  api_key_enabled: false
+
+runtime:
+  default_batch_size: 1000
+  fail_fast: true
+
+mysql:
+  pool_size: 2
+  max_overflow: 2
+
+neo4j:
+  fetch_size: 500
+
+observability:
+  metrics_enabled: true
+  tracing_enabled: false
+
+scheduler:
+  enabled: false
