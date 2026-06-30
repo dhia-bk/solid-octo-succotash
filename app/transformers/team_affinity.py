@@ -113,6 +113,7 @@ class TeamAffinityTransformer(BaseTransformer):
         user_node_id = build_user_id(row.user_id)
 
         properties = {
+            "affinity_id":             row.affinity_id,
             "affinity_type":           row.affinity_type,
             "total_predictions":       row.total_predictions,
             "prediction_accuracy_rate": row.prediction_accuracy_rate,

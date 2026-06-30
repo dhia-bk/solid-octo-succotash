@@ -63,7 +63,7 @@ class ServingMaterializationPipeline:
 
         log_event(
             self._logger,
-            "serving_materialization_started",
+            event_name="serving_materialization_started",
             run_id=self._run_id,
             dry_run=self._dry_run,
         )
@@ -84,7 +84,7 @@ class ServingMaterializationPipeline:
                 tribe_coverage = self._check_analytics_coverage(analytics_loader)
                 log_event(
                     self._logger,
-                    "analytics_coverage_checked",
+                    event_name="analytics_coverage_checked",
                     tribe_coverage=tribe_coverage,
                     run_id=self._run_id,
                 )
@@ -115,7 +115,7 @@ class ServingMaterializationPipeline:
             result.error_messages.append(str(exc))
             log_event(
                 self._logger,
-                "serving_materialization_error",
+                event_name="serving_materialization_error",
                 error=str(exc),
                 run_id=self._run_id,
             )
@@ -129,7 +129,7 @@ class ServingMaterializationPipeline:
             result.duration_seconds = perf_counter() - started
             log_event(
                 self._logger,
-                "serving_materialization_finished",
+                event_name="serving_materialization_finished",
                 run_id=self._run_id,
                 status=result.status,
                 duration_seconds=result.duration_seconds,
@@ -155,7 +155,7 @@ class ServingMaterializationPipeline:
                 "pagerank_count": pr_records[0]["pr_count"] if pr_records else 0,
             }
         except Exception as exc:
-            log_event(self._logger, "analytics_coverage_check_error", error=str(exc))
+            log_event(self._logger, event_name="analytics_coverage_check_error", error=str(exc))
             return {}
 
     def _get_user_count(self) -> int:
@@ -176,4 +176,4 @@ class ServingMaterializationPipeline:
                 },
             )
         except Exception as exc:
-            log_event(self._logger, "serving_audit_node_error", error=str(exc))
+            log_event(self._logger, event_name="serving_audit_node_error", error=str(exc))

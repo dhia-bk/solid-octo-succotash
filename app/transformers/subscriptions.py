@@ -39,6 +39,7 @@ class SubscriptionsTransformer(BaseTransformer):
     """
 
     source_name = PRODUCTS_SOURCE_NAME   # "dim_subscription_products"
+    secondary_sources = (LIFECYCLE_SOURCE_NAME,)
     inclusion_mode = INCLUSION_MODE       # GRAPH_CORE
 
     def transform(self, batch: ExtractorBatch) -> GraphWriteBatch:
@@ -117,9 +118,10 @@ class SubscriptionsTransformer(BaseTransformer):
                     start_label=USER,
                     end_label=SUBSCRIPTION_PRODUCT,
                     properties={
-                        "event_type":       row.event_type,
-                        "event_timestamp":  self._ts(row.event_timestamp_utc),
-                        "amount_paid_usd":  row.amount_paid_usd,
+                        "lifecycle_event_id": row.lifecycle_event_id,
+                        "event_type":         row.event_type,
+                        "event_timestamp":    self._ts(row.event_timestamp_utc),
+                        "amount_paid_usd":    row.amount_paid_usd,
                     },
                 ))
 

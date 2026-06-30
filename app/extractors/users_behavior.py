@@ -101,26 +101,38 @@ class UserBehaviorExtractor(BaseExtractor):
 
     def build_base_query(self) -> str:
         """
-        Return the base SELECT for fct_user_behavior without incremental
-        filtering.
+        Return the base SELECT wrapped in a LAG-based state-change filter.
 
-        The incremental clause (WHERE last_calculated_at > %(watermark_value)s)
-        is appended by the base runtime via build_incremental_clause().
+        The inner subquery computes the previous (behaviour_label, pcm_stage)
+        per user using a window function over the full table, so cross-batch
+        deduplication is correct regardless of chunk size.
+
+        Only rows where at least one of those two fields changed from the
+        previous snapshot for the same user are returned — the first row per
+        user (LAG = NULL) is always included.
         """
         columns = ",\n    ".join(self.get_source_columns())
         return f"""
 SELECT
     {columns}
-FROM {self.source_name}
-""".strip()
+FROM (
+    SELECT *,
+        LAG(behaviour_label) OVER (PARTITION BY user_id ORDER BY last_calculated_at, id) AS _prev_label,
+        LAG(pcm_stage)       OVER (PARTITION BY user_id ORDER BY last_calculated_at, id) AS _prev_stage
+    FROM {self.source_name}
+) _state_changes
+WHERE (_prev_label IS NULL OR _prev_label != behaviour_label OR _prev_stage != pcm_stage)""".strip()
 
     def build_incremental_clause(self, watermark_value: str | None) -> str:
         """
         Build the incremental filter using last_calculated_at.
 
-        Uses strict greater-than semantics so watermark advancement remains
-        monotonic across runs. No clause is emitted on first run (watermark
-        is None), triggering a full-table bootstrap load of all user profiles.
+        The watermark filter must be AND-appended (not WHERE) because the
+        base query already has a WHERE clause for state-change deduplication.
+
+        For incremental runs the LAG window is computed over the full table so
+        the first new row per user correctly compares against its actual
+        previous state, even if that previous row is before the watermark.
         """
         if not self.supports_incremental or not self.freshness_field:
             return ""
@@ -128,7 +140,7 @@ FROM {self.source_name}
         if not watermark_value:
             return ""
 
-        return f"\nWHERE {self.freshness_field} > %(watermark_value)s"
+        return f"\n  AND {self.freshness_field} > :watermark_value"
 
     def build_order_by_clause(self) -> str:
         """

@@ -156,7 +156,7 @@ class BaseExtractor(ABC):
         if not watermark_value:
             return ""
 
-        return f" WHERE {self.freshness_field} > %(watermark_value)s"
+        return f" WHERE {self.freshness_field} > :watermark_value"
 
     def build_order_by_clause(self) -> str:
         """
@@ -224,7 +224,7 @@ class BaseExtractor(ABC):
 
             log_event(
                 LOGGER,
-                "extractor.extract_all.success",
+                event_name="extractor.extract_all.success",
                 source_name=self.source_name,
                 row_count=batch.row_count,
                 watermark_before=watermark_value,
@@ -283,7 +283,7 @@ class BaseExtractor(ABC):
 
                 log_event(
                     LOGGER,
-                    "extractor.extract_chunk.success",
+                    event_name="extractor.extract_chunk.success",
                     source_name=self.source_name,
                     row_count=batch.row_count,
                     batch_sequence=batch_seq,
@@ -366,7 +366,7 @@ class BaseExtractor(ABC):
 
         log_event(
             LOGGER,
-            "extractor.fetch_raw_rows.start",
+            event_name="extractor.fetch_raw_rows.start",
             source_name=self.source_name,
             supports_incremental=self.supports_incremental,
             freshness_field=self.freshness_field,
@@ -665,7 +665,7 @@ class BaseExtractor(ABC):
 
         log_event(
             LOGGER,
-            "extractor.failure",
+            event_name="extractor.failure",
             source_name=self.source_name,
             pipeline_run_id=run_id,
             watermark_before=watermark_value,

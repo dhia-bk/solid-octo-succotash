@@ -47,6 +47,7 @@ class VouchersTransformer(BaseTransformer):
     """
 
     source_name = CATALOG_SOURCE_NAME   # "dim_voucher_catalog"
+    secondary_sources = (PURCHASES_SOURCE_NAME,)
     inclusion_mode = INCLUSION_MODE      # GRAPH_CORE
 
     def transform(self, batch: ExtractorBatch) -> GraphWriteBatch:
@@ -118,7 +119,7 @@ class VouchersTransformer(BaseTransformer):
 
                 # End endpoint via VoucherCanonicalizer.resolve_purchase_voucher_id
                 try:
-                    voucher_node_id = self._resolve_endpoint(PURCHASED, "end", row.voucher_key)
+                    voucher_node_id = self._resolve_endpoint(PURCHASED, "end", row.voucher_key, source_name=PURCHASES_SOURCE_NAME)
                 except TransformationError as exc:
                     self._skip(str(exc), row_id=row.purchase_id, voucher_key=row.voucher_key)
                     continue

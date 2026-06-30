@@ -109,7 +109,7 @@ class FullBackfillPipeline:
 
         log_event(
             self._logger,
-            "full_backfill_started",
+            event_name="full_backfill_started",
             run_id=self._run_id,
             wave_count=len(PIPELINE_EXECUTION_ORDER),
         )
@@ -124,14 +124,14 @@ class FullBackfillPipeline:
                 if halted:
                     log_event(
                         self._logger,
-                        "wave_skipped_halted",
+                        event_name="wave_skipped_halted",
                         wave=wave_idx,
                         pipelines=wave,
                     )
                     continue
 
                 log_event(
-                    self._logger, "wave_started",
+                    self._logger, event_name="wave_started",
                     wave=wave_idx, pipelines=wave,
                 )
 
@@ -141,21 +141,21 @@ class FullBackfillPipeline:
                 failed = [n for n, r in wave_results.items() if r.status == "failed"]
                 if failed:
                     log_event(
-                        self._logger, "wave_critical_failure",
+                        self._logger, event_name="wave_critical_failure",
                         wave=wave_idx, failed_pipelines=failed,
                     )
                     halted = True
                     final_status = "failed"
 
                 log_event(
-                    self._logger, "wave_finished",
+                    self._logger, event_name="wave_finished",
                     wave=wave_idx,
                     statuses={n: r.status for n, r in wave_results.items()},
                 )
 
         except Exception as exc:
             final_status = "failed"
-            log_event(self._logger, "full_backfill_error",
+            log_event(self._logger, event_name="full_backfill_error",
                       run_id=self._run_id, error=str(exc))
 
         finally:
@@ -170,7 +170,7 @@ class FullBackfillPipeline:
                 )
             log_event(
                 self._logger,
-                "full_backfill_finished",
+                event_name="full_backfill_finished",
                 run_id=self._run_id,
                 status=final_status,
                 duration_seconds=perf_counter() - started,
@@ -259,14 +259,14 @@ class FullBackfillPipeline:
                 )
             log_event(
                 self._logger,
-                "checkpoints_cleared",
+                event_name="checkpoints_cleared",
                 count=len(existing),
                 run_id=self._run_id,
             )
         except Exception as exc:
             log_event(
                 self._logger,
-                "checkpoint_clear_error",
+                event_name="checkpoint_clear_error",
                 error=str(exc),
                 run_id=self._run_id,
             )

@@ -75,6 +75,7 @@ class CompetitionsTransformer(BaseTransformer):
     """
 
     source_name = ROUNDS_SOURCE_NAME   # "dim_super6_rounds"
+    secondary_sources = (LMS_SOURCE_NAME, FIXTURES_SOURCE_NAME, PARTICIPANTS_SOURCE_NAME)
     inclusion_mode = INCLUSION_MODE    # GRAPH_CORE
 
     def transform(self, batch: ExtractorBatch) -> GraphWriteBatch:
@@ -158,7 +159,8 @@ class CompetitionsTransformer(BaseTransformer):
                 if row.created_by_user_id:
                     try:
                         lms_end_id = self._resolve_endpoint(
-                            PARTICIPATED_IN, "end", row.lms_competition_id
+                            PARTICIPATED_IN, "end", row.lms_competition_id,
+                            source_name=LMS_SOURCE_NAME,
                         )
                         if lms_end_id:
                             rels.append(builder.rel(
@@ -197,7 +199,7 @@ class CompetitionsTransformer(BaseTransformer):
                     self._skip("fixture_id is None — skipping HAS_FIXTURE rel", row_id=row.super6_round_fixture_id)
                     continue
 
-                start_id = self._resolve_endpoint(HAS_FIXTURE, "start", row.super6_round_id)
+                start_id = self._resolve_endpoint(HAS_FIXTURE, "start", row.super6_round_id, source_name=FIXTURES_SOURCE_NAME)
                 if start_id is None:
                     continue
 
@@ -233,7 +235,7 @@ class CompetitionsTransformer(BaseTransformer):
                     self._skip("super6_round_id is None — skipping PARTICIPATED_IN rel", row_id=row.super6_participant_id)
                     continue
 
-                end_id = self._resolve_endpoint(PARTICIPATED_IN, "end", row.super6_round_id)
+                end_id = self._resolve_endpoint(PARTICIPATED_IN, "end", row.super6_round_id, source_name=PARTICIPANTS_SOURCE_NAME)
                 if end_id is None:
                     continue
 
@@ -244,9 +246,10 @@ class CompetitionsTransformer(BaseTransformer):
                     start_label=USER,
                     end_label=SUPER6_ROUND,
                     properties={
-                        "joined_at":    self._ts(row.joined_at_utc),
-                        "total_points": row.total_points,
-                        "is_winner":    self._bool(row.is_winner),
+                        "super6_participant_id": row.super6_participant_id,
+                        "joined_at":             self._ts(row.joined_at_utc),
+                        "total_points":          row.total_points,
+                        "is_winner":             self._bool(row.is_winner),
                     },
                 ))
             except (TransformationError, CanonicalizationError) as exc:

@@ -126,7 +126,7 @@ FROM {self.source_name}
         if not watermark_value:
             return ""
 
-        return f"\nWHERE {self.freshness_field} > %(watermark_value)s"
+        return f"\nWHERE {self.freshness_field} > :watermark_value"
 
     def build_order_by_clause(self) -> str:
         """

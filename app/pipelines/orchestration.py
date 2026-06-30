@@ -139,14 +139,14 @@ class PipelineOrchestrator:
             if halted:
                 for name in wave:
                     log_event(
-                        self._logger, "pipeline_wave_skipped",
+                        self._logger, event_name="pipeline_wave_skipped",
                         wave=wave_idx, pipeline_name=name,
                         reason="prior critical failure",
                     )
                 continue
 
             log_event(
-                self._logger, "pipeline_wave_started",
+                self._logger, event_name="pipeline_wave_started",
                 wave=wave_idx, pipelines=wave,
             )
 
@@ -156,13 +156,13 @@ class PipelineOrchestrator:
             for name, result in wave_results.items():
                 if result.status == "failed":
                     log_event(
-                        self._logger, "pipeline_wave_critical_failure",
+                        self._logger, event_name="pipeline_wave_critical_failure",
                         pipeline_name=name, wave=wave_idx,
                     )
                     halted = True
 
             log_event(
-                self._logger, "pipeline_wave_finished",
+                self._logger, event_name="pipeline_wave_finished",
                 wave=wave_idx,
                 statuses={n: r.status for n, r in wave_results.items()},
             )

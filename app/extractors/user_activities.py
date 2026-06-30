@@ -144,7 +144,7 @@ class UserActivitiesExtractor(BaseExtractor):
         Return the base SELECT for fct_user_activities without incremental
         filtering.
 
-        The incremental clause (WHERE activity_at_utc > %(watermark_value)s)
+        The incremental clause (WHERE activity_at_utc > :watermark_value)
         is appended by the base runtime via build_incremental_clause().
         """
         columns = ",\n    ".join(self.get_source_columns())
@@ -171,7 +171,7 @@ FROM {self.source_name}
         if not watermark_value:
             return ""
 
-        return f"\nWHERE {self.freshness_field} > %(watermark_value)s"
+        return f"\nWHERE {self.freshness_field} > :watermark_value"
 
     def build_order_by_clause(self) -> str:
         """

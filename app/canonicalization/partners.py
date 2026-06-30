@@ -296,7 +296,13 @@ def build_partner_canonicalizer(
 
         # Expand each alias with its suffix-stripped form so both are registered
         expanded = _expand_with_stripped_forms(aliases, suffix_pattern)
-        alias_map.register(canonical_id, canonical_name, expanded)
+        try:
+            alias_map.register(canonical_id, canonical_name, expanded)
+        except Exception as exc:
+            import logging as _logging
+            _logging.getLogger(__name__).warning(
+                "PartnerCanonicalizer: skipping partner due to alias collision — %s", exc
+            )
 
     return PartnerCanonicalizer(alias_map, suffix_pattern)
 

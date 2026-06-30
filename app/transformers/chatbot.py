@@ -71,6 +71,7 @@ class ChatbotTransformer(BaseTransformer):
     """
 
     source_name = CONV_SOURCE_NAME   # "dim_chatbot_conversations"
+    secondary_sources = (MSG_SOURCE_NAME, TOOL_SOURCE_NAME)
     inclusion_mode = INCLUSION_MODE  # GRAPH_CORE
 
     def transform(self, batch: ExtractorBatch) -> GraphWriteBatch:

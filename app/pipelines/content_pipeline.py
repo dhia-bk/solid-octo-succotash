@@ -20,6 +20,5 @@ class ContentPipeline(BasePipeline):
     sources = (
         "dim_tags",                     # Tag catalog nodes — before HAS_TAG rels
         "dim_news",                     # News nodes
-        "dim_ai_articles",              # AIArticle nodes + GENERATED_FOR rels
-        "dim_private_league_themes",    # LeagueTheme nodes + HAS_THEME rels
+"dim_private_league_themes",    # LeagueTheme nodes + HAS_THEME rels
     )

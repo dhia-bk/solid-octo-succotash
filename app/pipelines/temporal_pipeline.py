@@ -133,7 +133,7 @@ class TemporalPipeline(BasePipeline):
         except Exception as exc:
             result.status = "failed"
             result.error_messages.append(str(exc))
-            log_event(self._logger, "temporal_pipeline_error",
+            log_event(self._logger, event_name="temporal_pipeline_error",
                       run_id=self._run_id, error=str(exc))
 
         finally:
@@ -141,7 +141,7 @@ class TemporalPipeline(BasePipeline):
             result.duration_seconds = perf_counter() - started
             log_event(
                 self._logger,
-                "temporal_pipeline_summary",
+                event_name="temporal_pipeline_summary",
                 run_id=self._run_id,
                 current_state_repairs=current_state_repairs,
                 chain_gap_warnings=chain_gap_warnings,
@@ -176,14 +176,14 @@ class TemporalPipeline(BasePipeline):
 
             log_event(
                 self._logger,
-                "current_state_repairs",
+                event_name="current_state_repairs",
                 repairs=repairs,
                 run_id=self._run_id,
             )
         except Exception as exc:
             log_event(
                 self._logger,
-                "current_state_repair_error",
+                event_name="current_state_repair_error",
                 error=str(exc),
                 run_id=self._run_id,
             )
@@ -201,7 +201,7 @@ class TemporalPipeline(BasePipeline):
                 gap_warnings += 1
                 log_event(
                     self._logger,
-                    "persona_state_chain_gap_warning",
+                    event_name="persona_state_chain_gap_warning",
                     user_id=record["user_id"],
                     gap_count=record["gap_count"],
                     run_id=self._run_id,
@@ -209,7 +209,7 @@ class TemporalPipeline(BasePipeline):
         except Exception as exc:
             log_event(
                 self._logger,
-                "chain_gap_check_error",
+                event_name="chain_gap_check_error",
                 error=str(exc),
                 run_id=self._run_id,
             )
@@ -255,7 +255,7 @@ class TemporalPipeline(BasePipeline):
         except Exception as exc:
             log_event(
                 self._logger,
-                "era_backfill_error",
+                event_name="era_backfill_error",
                 error=str(exc),
                 run_id=self._run_id,
             )
@@ -303,7 +303,7 @@ class TemporalPipeline(BasePipeline):
         except Exception as exc:
             log_event(
                 self._logger,
-                "temporal_audit_node_error",
+                event_name="temporal_audit_node_error",
                 error=str(exc),
                 run_id=self._run_id,
             )

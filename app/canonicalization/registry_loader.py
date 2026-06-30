@@ -171,6 +171,9 @@ class CanonicalRegistryLoader:
 
             _append_if_present(aliases, row.get("team_name"))
             _append_if_present(aliases, row.get("team_code"))
+            # canonical_id is the stringified warehouse team_id — register it
+            # as an alias so resolve_team_id(int) can find it
+            _append_if_present(aliases, canonical_id)
 
             # alternate_names may be stored as a list property on the node
             alt = row.get("alternate_names")
@@ -718,17 +721,28 @@ def _build_from_graph(neo4j_client: Neo4jClient) -> dict[str, BaseCanonicalizer]
     competition_aliases = loader.load_competition_aliases()
     competition_labels = loader.load_competition_node_labels()
 
-    registry = {
-        "teams": build_team_canonicalizer(team_aliases),
-        "topics": build_topic_canonicalizer(topic_aliases),
-        "partners": build_partner_canonicalizer(partner_aliases),
-        "vouchers": build_voucher_canonicalizer(voucher_aliases),
-        "tags": build_tag_canonicalizer(tag_aliases),
-        "competitions": build_competition_canonicalizer(
+    builders = {
+        "teams": lambda: build_team_canonicalizer(team_aliases),
+        "topics": lambda: build_topic_canonicalizer(topic_aliases),
+        "partners": lambda: build_partner_canonicalizer(partner_aliases),
+        "vouchers": lambda: build_voucher_canonicalizer(voucher_aliases),
+        "tags": lambda: build_tag_canonicalizer(tag_aliases),
+        "competitions": lambda: build_competition_canonicalizer(
             competition_aliases,
             node_labels=competition_labels,
         ),
     }
+
+    registry: dict[str, BaseCanonicalizer] = {}
+    for domain, build_fn in builders.items():
+        try:
+            registry[domain] = build_fn()
+        except Exception as exc:
+            logger.warning(
+                "Failed to build %s canonicalizer — domain will be skipped",
+                domain,
+                extra={"error": str(exc)},
+            )
 
     logger.info(
         "Canonicalizer registry built from graph",

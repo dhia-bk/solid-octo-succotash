@@ -59,6 +59,7 @@ class NotificationsTransformer(BaseTransformer):
     """
 
     source_name = CONTENT_SOURCE_NAME   # "dim_notification_content"
+    secondary_sources = (RECIPIENTS_SOURCE_NAME, PREFERENCES_SOURCE_NAME)
     inclusion_mode = INCLUSION_MODE      # GRAPH_CORE
 
     def transform(self, batch: ExtractorBatch) -> GraphWriteBatch:
@@ -93,7 +94,6 @@ class NotificationsTransformer(BaseTransformer):
                 properties = {
                     "sender_user_id":          row.sender_user_id,
                     "normalized_message_text": row.normalized_message_text,
-                    "message_text_sample":     row.message_text_sample,
                     "first_seen_at":           self._ts(row.first_seen_at_utc),
                     "last_seen_at":            self._ts(row.last_seen_at_utc),
                 }

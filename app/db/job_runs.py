@@ -580,11 +580,11 @@ class JobRunRepository:
     def _normalize_optional_datetime(value: str | None) -> str | None:
         if value is None:
             return None
-        return ensure_utc_datetime(value).isoformat()
+        return ensure_utc_datetime(parse_iso_datetime(value)).isoformat()
 
     @staticmethod
     def _normalize_required_datetime(value: str) -> str:
-        return ensure_utc_datetime(value).isoformat()
+        return ensure_utc_datetime(parse_iso_datetime(value)).isoformat()
 
     @staticmethod
     def _sanitize_metadata(metadata: dict[str, Any]) -> dict[str, Any]:

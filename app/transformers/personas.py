@@ -29,7 +29,7 @@ from datetime import datetime
 
 from app.contracts.graph_records import GraphWriteBatch, NodeRecord, RelationshipRecord
 from app.contracts.warehouse_rows import ExtractorBatch
-from app.core.constants import CURRENT_STATE, PERSONA_STATE, USER
+from app.core.constants import CURRENT_STATE, HAS_STATE, PERSONA_STATE, USER
 from app.core.exceptions import CanonicalizationError, TransformationError
 from app.core.ids import build_persona_state_snapshot_key, build_user_id
 from app.core.logging import log_transformation_finished, log_transformation_started
@@ -65,10 +65,13 @@ class PersonasTransformer(BaseTransformer):
             run_id=self._run_id,
         )
 
-        # Pre-pass: determine the latest snapshot per user_id for CURRENT_STATE
-        latest_per_user = self._find_latest_per_user(batch.rows)
+        # Only emit a PersonaState node when (behaviour_label, pcm_stage) changes
+        rows_to_process = self._filter_state_changes(batch.rows)
 
-        for row in batch.rows:
+        # Determine CURRENT_STATE candidate from the state-changed rows only
+        latest_per_user = self._find_latest_per_user(rows_to_process)
+
+        for row in rows_to_process:
             row: UserBehaviorRow
             try:
                 if not row.user_id:
@@ -95,6 +98,35 @@ class PersonasTransformer(BaseTransformer):
         )
 
         return builder.batch(nodes, rels, batch_sequence=0)
+
+    # -- State-change deduplication -------------------------------------------
+
+    def _filter_state_changes(self, rows: list) -> list:
+        """
+        Return only rows where (behaviour_label, pcm_stage) changed from the
+        previous chronological snapshot for that user.  The first row per user
+        is always included.  Null user_id rows are dropped silently.
+        """
+        valid_rows = [r for r in rows if r.user_id]
+        sorted_rows = sorted(
+            valid_rows,
+            key=lambda r: (
+                r.user_id,
+                r.last_calculated_at or datetime.min,
+                r.id,
+            ),
+        )
+
+        result: list = []
+        prev_state: dict[str, tuple] = {}
+
+        for row in sorted_rows:
+            state = (row.behaviour_label, row.pcm_stage)
+            if prev_state.get(row.user_id) != state:
+                result.append(row)
+                prev_state[row.user_id] = state
+
+        return result
 
     # -- Latest snapshot resolution -------------------------------------------
 
@@ -172,6 +204,17 @@ class PersonasTransformer(BaseTransformer):
         node = builder.node(PERSONA_STATE, node_id, properties)
 
         row_rels: list[RelationshipRecord] = []
+
+        # HAS_STATE links User → every PersonaState snapshot (full history)
+        row_rels.append(
+            builder.rel(
+                HAS_STATE,
+                user_node_id,
+                node_id,
+                start_label=USER,
+                end_label=PERSONA_STATE,
+            )
+        )
 
         if is_current:
             row_rels.append(

@@ -239,6 +239,7 @@ def _register_rel_queries(registry: MergeQueryRegistry) -> None:
     from app.loaders.merge_queries import tags
     from app.loaders.merge_queries import team_affinity
     from app.loaders.merge_queries import themes
+    from app.loaders.merge_queries import topics
     from app.loaders.merge_queries import users
     from app.loaders.merge_queries import vouchers
     from app.loaders.merge_queries import app_identity
@@ -264,7 +265,7 @@ def _register_rel_queries(registry: MergeQueryRegistry) -> None:
         ("COMMENTED",           "dim_comments",                     None,       posts.get_commented_merge_query),
         ("REPLIES_TO",          "dim_comments",                     None,       posts.get_replies_to_merge_query),
         ("JOINED_DISCUSSION",   "fct_discussion_events",            None,       discussions.get_joined_discussion_merge_query),
-        ("DIRECT_MESSAGE",      "fct_chat_messages",                None,       chat_social.get_direct_message_merge_query),
+        ("DIRECT_MESSAGE",      "dim_chat_direct_pairs",            None,       chat_social.get_direct_message_merge_query),
         # Predictions
         ("PREDICTED",           "fct_predictions",                  None,       predictions.get_predicted_merge_query),
         ("CHALLENGED",          "fct_prediction_duels",             None,       duels.get_challenged_merge_query),

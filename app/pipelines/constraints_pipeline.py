@@ -64,7 +64,7 @@ class ConstraintsPipeline(BasePipeline):
 
             log_event(
                 self._logger,
-                "constraints_verified",
+                event_name="constraints_verified",
                 total=len(constraint_results),
                 all_present=True,
             )
@@ -78,7 +78,7 @@ class ConstraintsPipeline(BasePipeline):
                 ]
                 log_event(
                     self._logger,
-                    "indexes_missing_warning",
+                    event_name="indexes_missing_warning",
                     missing=missing_index_desc,
                     message="Missing indexes may degrade load performance",
                 )
@@ -92,7 +92,7 @@ class ConstraintsPipeline(BasePipeline):
         except Exception as exc:
             result.status = "failed"
             result.error_messages.append(str(exc))
-            log_event(self._logger, "constraints_pipeline_error", error=str(exc))
+            log_event(self._logger, event_name="constraints_pipeline_error", error=str(exc))
 
         finally:
             result.finished_at = utc_now().isoformat()

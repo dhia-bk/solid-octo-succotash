@@ -317,19 +317,21 @@ class Neo4jClient:
         tx: ManagedTransaction,
         cypher: str,
         params: Mapping[str, Any],
-    ) -> Result:
+    ) -> tuple[list[dict], Any]:
         """
-        Execute Cypher inside a managed transaction.
+        Execute Cypher inside a managed transaction and consume results immediately.
+        Neo4j 5.x requires results to be consumed before the transaction closes.
         """
-        return tx.run(cypher, **params)
-
-    def _consume_result(self, result: Result) -> dict[str, Any]:
-        """
-        Consume a Neo4j result into stable record and summary dictionaries.
-        """
-        records = [dict(record.items()) for record in result]
+        result = tx.run(cypher, **params)
+        records = [dict(r.items()) for r in result]
         summary = result.consume()
+        return records, summary
 
+    def _consume_result(self, payload: tuple[list[dict], Any]) -> dict[str, Any]:
+        """
+        Convert the pre-consumed (records, summary) tuple into stable dict shape.
+        """
+        records, summary = payload
         return {
             "records": records,
             "summary": self._build_summary(summary),

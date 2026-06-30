@@ -72,6 +72,9 @@ class BaseTransformer(ABC):
     source_name: str = ""
     """Logical warehouse source/table name. Must match schema SOURCE_NAME."""
 
+    secondary_sources: tuple[str, ...] = ()
+    """Additional source names this transformer handles via dispatch on batch.source_name."""
+
     inclusion_mode: str = ""
     """Inclusion category. Must match schema INCLUSION_MODE."""
 
@@ -277,6 +280,7 @@ class BaseTransformer(ABC):
         rel_type: str,
         endpoint_name: str,
         raw_value: Any,
+        source_name: str | None = None,
     ) -> str | None:
         """
         Resolve a relationship endpoint node ID using the declared EndpointSpec.
@@ -291,6 +295,9 @@ class BaseTransformer(ABC):
             rel_type:       Graph relationship type, e.g. "PREDICTED".
             endpoint_name:  "start" or "end".
             raw_value:      Raw source field value (ID, name, or alias).
+            source_name:    Source name for endpoint spec lookup. Defaults to
+                            self.source_name. Pass the secondary source name when
+                            calling from a multi-source transformer dispatch handler.
 
         Returns:
             Resolved graph node ID string, or None if resolution fails and
@@ -302,18 +309,19 @@ class BaseTransformer(ABC):
                 registered for this (rel_type, endpoint_name, source_name) triple.
             TransformationError: If raw_value is None and the endpoint is required.
         """
+        _source = source_name or self.source_name
         if raw_value is None:
-            spec = get_endpoint_spec(rel_type, endpoint_name, self.source_name)
+            spec = get_endpoint_spec(rel_type, endpoint_name, _source)
             if spec.required:
                 raise TransformationError(
                     "Required endpoint value is None",
                     rel_type=rel_type,
                     endpoint=endpoint_name,
-                    source=self.source_name,
+                    source=_source,
                 )
             return None
 
-        spec = get_endpoint_spec(rel_type, endpoint_name, self.source_name)
+        spec = get_endpoint_spec(rel_type, endpoint_name, _source)
 
         if spec.canonicalizer is None:
             return normalize_string_id(raw_value, field_name=spec.id_source_field or endpoint_name)
@@ -330,7 +338,7 @@ class BaseTransformer(ABC):
                     rel_type=rel_type,
                     endpoint=endpoint_name,
                     raw_value=raw_value,
-                    source=self.source_name,
+                    source=_source,
                 ) from exc
             return None
 
@@ -341,7 +349,7 @@ class BaseTransformer(ABC):
                     rel_type=rel_type,
                     endpoint=endpoint_name,
                     raw_value=raw_value,
-                    source=self.source_name,
+                    source=_source,
                 )
             return None
 

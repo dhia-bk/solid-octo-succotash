@@ -241,15 +241,15 @@ class ModelRegistryRepository:
             :created_at,
             :updated_at
         )
-        ON DUPLICATE KEY UPDATE
-            model_type = VALUES(model_type),
-            logical_version = VALUES(logical_version),
-            config_version = VALUES(config_version),
-            status = VALUES(status),
-            artifact_uri = VALUES(artifact_uri),
-            compatibility_metadata_json = VALUES(compatibility_metadata_json),
-            metrics_summary_json = VALUES(metrics_summary_json),
-            updated_at = VALUES(updated_at)
+        ON CONFLICT (run_id) DO UPDATE SET
+            model_type = EXCLUDED.model_type,
+            logical_version = EXCLUDED.logical_version,
+            config_version = EXCLUDED.config_version,
+            status = EXCLUDED.status,
+            artifact_uri = EXCLUDED.artifact_uri,
+            compatibility_metadata_json = EXCLUDED.compatibility_metadata_json,
+            metrics_summary_json = EXCLUDED.metrics_summary_json,
+            updated_at = EXCLUDED.updated_at
         """
 
         params = {

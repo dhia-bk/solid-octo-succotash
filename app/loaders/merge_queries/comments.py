@@ -15,7 +15,7 @@ def get_comment_merge_query(source_name: str = "dim_comments") -> str:
         merge_key_field="id",
         write_once_fields=["created_at"],
         mutable_fields=[
-            "content_preview",
+            "content",
             "parent_comment_id",
             "post_id",
             "is_moderated",

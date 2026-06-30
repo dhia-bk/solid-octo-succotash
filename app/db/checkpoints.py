@@ -238,12 +238,12 @@ class CheckpointRepository:
             :metadata_json,
             :updated_at
         )
-        ON DUPLICATE KEY UPDATE
-            checkpoint_strategy = VALUES(checkpoint_strategy),
-            watermark_value = VALUES(watermark_value),
-            last_successful_run_id = VALUES(last_successful_run_id),
-            metadata_json = VALUES(metadata_json),
-            updated_at = VALUES(updated_at)
+        ON CONFLICT (namespace, pipeline_name, source_name) DO UPDATE SET
+            checkpoint_strategy = EXCLUDED.checkpoint_strategy,
+            watermark_value = EXCLUDED.watermark_value,
+            last_successful_run_id = EXCLUDED.last_successful_run_id,
+            metadata_json = EXCLUDED.metadata_json,
+            updated_at = EXCLUDED.updated_at
         """
 
         params = {

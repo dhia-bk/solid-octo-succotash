@@ -212,10 +212,10 @@ FROM {self.source_name}
             because status, score, and prediction counts mutate after kickoff.
 
         Backfill mode:
-            WHERE kickoff_at_utc > %(watermark_value)s   (if watermark set)
+            WHERE kickoff_at_utc > :watermark_value   (if watermark set)
             [no clause]                                   (first run / full load)
 
-            Standard monotonic watermark incremental. Uses %(watermark_value)s
+            Standard monotonic watermark incremental. Uses :watermark_value
             so the base runtime's _build_query_params() populates the value.
         """
         if self.extraction_mode == ACTIVE_WINDOW:
@@ -226,7 +226,7 @@ FROM {self.source_name}
             return ""
         if not watermark_value:
             return ""
-        return f"\nWHERE {self.freshness_field} > %(watermark_value)s"
+        return f"\nWHERE {self.freshness_field} > :watermark_value"
 
     def _build_active_window_clause(self) -> str:
         """

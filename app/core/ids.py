@@ -60,6 +60,9 @@ def _stringify_primitive(value: Any) -> str:
         # Stable enough for IDs only when source values are already discrete.
         return format(value, ".15g")
 
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+
     raise ValidationError(
         "Unsupported ID value type",
         raw_type=type(value).__name__,

@@ -27,6 +27,5 @@ class EconomyPipeline(BasePipeline):
         "dim_partner_reward_catalog",       # PartnerReward nodes (core)
         "fct_partner_reward_inventory",     # PartnerReward enrichment
         "fct_partner_reward_redemptions",   # REDEEMED rels — PII pre-check in transformer
-        "fct_coin_transactions",            # CoinTransaction nodes + SPENT rels
-        "fct_awards_and_achievements",      # Achievement nodes + ACHIEVED rels
+"fct_awards_and_achievements",      # Achievement nodes + ACHIEVED rels
     )

@@ -118,6 +118,7 @@ class ThemesTransformer(BaseTransformer):
                 node_id,
                 start_label=PRIVATE_LEAGUE,
                 end_label=LEAGUE_THEME,
+                properties={"theme_id": str(row.theme_id) if row.theme_id is not None else None},
             )
         else:
             self._skip(

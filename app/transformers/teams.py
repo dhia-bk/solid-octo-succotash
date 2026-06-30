@@ -70,6 +70,7 @@ class TeamsTransformer(BaseTransformer):
     """
 
     source_name = _BASE_SOURCE_NAME
+    secondary_sources = (_ENHANCED_SOURCE_NAME,)
     inclusion_mode = TEAMS_INCLUSION_MODE  # GRAPH_CORE
 
     def transform(self, batch: ExtractorBatch) -> GraphWriteBatch:

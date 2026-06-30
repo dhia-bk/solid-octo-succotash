@@ -92,6 +92,7 @@ class CommentsTransformer(BaseTransformer):
             "user_id":           row.user_id,
             "post_id":           row.post_id,
             "parent_comment_id": row.parent_comment_id,
+            "content":           row.content,
             "created_at":        self._ts(row.created_at_utc),
             "like_count":        row.like_count,
         }

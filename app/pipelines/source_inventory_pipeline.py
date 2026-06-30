@@ -18,7 +18,7 @@ from app.mappings.source_to_graph import (
     validate_source_artifact_declarations,
 )
 from app.pipelines.base import BasePipeline, PipelineResult
-from app.validation.source_coverage_checks import SourceCoverageValidator
+from app.validation.source_coverage_checks import run_all_coverage_checks
 
 LOGGER = get_logger(__name__)
 
@@ -54,7 +54,7 @@ class SourceInventoryPipeline(BasePipeline):
                     result.error_messages.append(err)
                 log_event(
                     self._logger,
-                    "source_artifact_declaration_errors",
+                    event_name="source_artifact_declaration_errors",
                     error_count=len(declaration_errors),
                     errors=declaration_errors[:10],
                 )
@@ -71,22 +71,24 @@ class SourceInventoryPipeline(BasePipeline):
                     errors.append(msg)
                     log_event(
                         self._logger,
-                        "source_inventory_upsert_error",
+                        event_name="source_inventory_upsert_error",
                         source_name=declaration.source_name,
                         error=str(exc),
                     )
 
             log_event(
                 self._logger,
-                "source_inventory_upserted",
+                event_name="source_inventory_upserted",
                 total_declarations=len(SOURCE_ARTIFACT_DECLARATIONS),
                 upserted=upserted,
                 errors=len(errors),
             )
 
             # 3. Run coverage checks
-            coverage_validator = SourceCoverageValidator(self._run_id)
-            coverage_results = coverage_validator.run_all_coverage_checks()
+            coverage_results = run_all_coverage_checks(
+                transformer_registry=self._transformer_registry,
+                extractor_registry=self._extractor_registry,
+            )
             critical_failures = [
                 r for r in coverage_results
                 if not r.passed and r.severity.value == "critical"
@@ -106,7 +108,7 @@ class SourceInventoryPipeline(BasePipeline):
         except Exception as exc:
             result.status = "failed"
             result.error_messages.append(str(exc))
-            log_event(self._logger, "source_inventory_pipeline_error", error=str(exc))
+            log_event(self._logger, event_name="source_inventory_pipeline_error", error=str(exc))
 
         finally:
             result.finished_at = utc_now().isoformat()
@@ -118,12 +120,12 @@ class SourceInventoryPipeline(BasePipeline):
     def _upsert_source_declaration(self, declaration: object) -> None:
         """
         Upsert one SourceArtifactDeclaration into the source_inventory table.
-        Uses best-effort introspection of the metadata_db interface.
         """
-        try:
-            from app.db.source_inventory import SourceInventoryRepository
-            repo = SourceInventoryRepository(self._metadata_db)
-            repo.upsert_source(declaration)
-        except ImportError:
-            # Fall back to direct metadata_db execute if no dedicated repo exists
-            pass
+        from app.db.source_inventory import SourceInventoryRepository
+        repo = SourceInventoryRepository(self._metadata_db)
+        repo.upsert_source(
+            source_name=declaration.source_name,
+            inclusion_mode=declaration.inclusion_mode,
+            graph_entity_mappings=[declaration.target_label_or_rel] if declaration.target_label_or_rel else [],
+            notes=declaration.notes,
+        )

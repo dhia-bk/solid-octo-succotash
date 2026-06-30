@@ -18,8 +18,10 @@ def get_post_merge_query(source_name: str = "dim_posts") -> str:
         merge_key_field="id",
         write_once_fields=["published_at"],
         mutable_fields=[
+            "title",
+            "description",
+            "content",
             "post_type",
-            "content_preview",
             "is_featured",
             "like_count",
             "comment_count",

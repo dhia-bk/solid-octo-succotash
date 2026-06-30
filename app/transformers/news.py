@@ -56,6 +56,7 @@ class NewsTransformer(BaseTransformer):
 
                 properties = {
                     "title":        row.title,
+                    "content":      row.content,
                     "author":       row.author,
                     "url":          row.url,
                     "image":        row.image,

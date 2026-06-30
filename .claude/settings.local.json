@@ -8,7 +8,26 @@
       "Bash(Select-Object FullName, Length)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\gharb\\\\Desktop\\\\Pulse_KG\" -Recurse -Depth 2)",
       "Bash(Select-Object FullName)",
-      "Bash(python3 -c \"from app.pipelines import build_pipeline_context; print\\('Import successful'\\)\")"
+      "Bash(python3 -c \"from app.pipelines import build_pipeline_context; print\\('Import successful'\\)\")",
+      "Skill(code-review)",
+      "Skill(code-review:*)",
+      "Bash(.venv/bin/python3 -)",
+      "Bash(.venv/bin/python3 scripts/run_full_backfill.py)",
+      "Bash(python -m app.pipelines.full_backfill_pipeline)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(sleep 10 && tail -20 /tmp/backfill2.log)",
+      "Read(//tmp/**)",
+      "Bash(.venv/bin/python -m app.pipelines.full_backfill_pipeline > /tmp/backfill2.log 2>&1 & *)",
+      "Bash(kill 348335)",
+      "Bash(awk '{print \"PID:\", $2, \"CPU:\", $3, \"MEM:\", $4}')",
+      "Bash(.venv/bin/python3 -c ' *)",
+      "Bash(ps -p 595411 --no-headers -o etime,state)",
+      "Bash(getent hosts *)",
+      "Read(//etc/**)",
+      "Bash(dig pg_db)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
     ]
   }
 }

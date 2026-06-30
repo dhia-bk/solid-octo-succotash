@@ -266,6 +266,9 @@ def build_topic_canonicalizer(
     Returns:
         Populated TopicCanonicalizer.
     """
+    import logging as _logging
+    _logger = _logging.getLogger(__name__)
+
     alias_map = AliasMap(source_name="TopicCanonicalizer")
 
     for canonical_id, aliases in alias_data.items():
@@ -279,7 +282,15 @@ def build_topic_canonicalizer(
         # forms are registered as aliases pointing to the same canonical entry.
         expanded_aliases = _expand_aliases(aliases)
 
-        alias_map.register(canonical_id, canonical_name, expanded_aliases)
+        try:
+            alias_map.register(canonical_id, canonical_name, expanded_aliases)
+        except Exception as exc:
+            # Alias collision from duplicate topic labels in the warehouse data.
+            # Skip the colliding topic rather than crashing the whole registry.
+            _logger.warning(
+                "TopicCanonicalizer: skipping topic due to alias collision — %s",
+                exc,
+            )
 
     return TopicCanonicalizer(alias_map)
 

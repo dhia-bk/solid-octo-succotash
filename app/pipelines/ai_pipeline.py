@@ -19,6 +19,4 @@ class AIPipeline(BasePipeline):
     pipeline_name = AI_PIPELINE
     sources = (
         "dim_chatbot_conversations",  # ChatbotConversation nodes + TALKED_TO rels
-        "fct_chatbot_messages",       # ChatbotMessage nodes + HAS_MESSAGE rels
-        "fct_chatbot_tool_calls",     # ToolCall + Tool nodes + USED_TOOL rels
     )

@@ -1,7 +1,7 @@
-PYTHON := python
+PYTHON := .venv/bin/python3
 PIP := pip
 
-.PHONY: setup format lint test run-api run-backfill run-sync run-leiden up down
+.PHONY: setup format lint test run-api run-backfill run-sync run-leiden migrate-neo4j migrate-metadata up down
 
 setup:
 	$(PIP) install --upgrade pip
@@ -30,6 +30,12 @@ run-sync:
 
 run-leiden:
 	$(PYTHON) scripts/run_leiden.py
+
+migrate-neo4j:
+	$(PYTHON) scripts/migrate_neo4j.py
+
+migrate-metadata:
+	$(PYTHON) scripts/migrate_metadata.py
 
 up:
 	docker compose up -d

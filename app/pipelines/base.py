@@ -137,9 +137,9 @@ def build_pipeline_context(run_id: str, dry_run: bool = False) -> PipelineContex
 
     settings = get_settings()
 
-    mysql_client = MySQLClient(settings)
-    neo4j_client = Neo4jClient(settings)
-    metadata_db = MetadataDBClient(settings)
+    mysql_client = MySQLClient(settings.mysql)
+    neo4j_client = Neo4jClient(settings.neo4j)
+    metadata_db = MetadataDBClient(settings.metadata_db)
 
     checkpoint_repo = CheckpointRepository(metadata_db)
     job_runs = JobRunRepository(metadata_db)
@@ -166,7 +166,12 @@ def build_pipeline_context(run_id: str, dry_run: bool = False) -> PipelineContex
 
     extractor_registry = _build_extractor_registry(mysql_client)
     transformer_registry = _build_transformer_registry()
-    canonicalizer_registry: dict[str, BaseCanonicalizer] = {}
+
+    from app.canonicalization.registry_loader import build_canonicalizer_registry
+    try:
+        canonicalizer_registry = build_canonicalizer_registry(neo4j_client=neo4j_client)
+    except Exception:
+        canonicalizer_registry: dict[str, BaseCanonicalizer] = {}
 
     return PipelineContext(
         run_id=run_id,
@@ -198,7 +203,7 @@ def _build_extractor_registry(mysql_client: Any) -> dict[str, BaseExtractor]:
         try:
             module = import_module(f"app.extractors.{py_file.stem}")
         except Exception as exc:
-            log_event(LOGGER, "extractor_registry_import_error",
+            log_event(LOGGER, event_name="extractor_registry_import_error",
                       module=py_file.stem, error=str(exc))
             continue
         for attr_name in dir(module):
@@ -213,7 +218,7 @@ def _build_extractor_registry(mysql_client: Any) -> dict[str, BaseExtractor]:
                     instance = attr(mysql_client)
                     registry[attr.source_name] = instance
                 except Exception as exc:
-                    log_event(LOGGER, "extractor_registry_instantiation_error",
+                    log_event(LOGGER, event_name="extractor_registry_instantiation_error",
                               extractor=attr_name, error=str(exc))
 
     return registry
@@ -233,7 +238,7 @@ def _build_transformer_registry() -> dict[str, type[BaseTransformer]]:
         try:
             module = import_module(f"app.transformers.{py_file.stem}")
         except Exception as exc:
-            log_event(LOGGER, "transformer_registry_import_error",
+            log_event(LOGGER, event_name="transformer_registry_import_error",
                       module=py_file.stem, error=str(exc))
             continue
         for attr_name in dir(module):
@@ -245,6 +250,8 @@ def _build_transformer_registry() -> dict[str, type[BaseTransformer]]:
                 and getattr(attr, "source_name", "")
             ):
                 registry[attr.source_name] = attr
+                for secondary in getattr(attr, "secondary_sources", ()):
+                    registry[secondary] = attr
 
     return registry
 
@@ -358,7 +365,7 @@ class BasePipeline(ABC):
         except Exception as exc:
             result.status = "failed"
             result.error_messages.append(str(exc))
-            log_event(self._logger, "pipeline_error",
+            log_event(self._logger, event_name="pipeline_error",
                       pipeline_name=self.pipeline_name,
                       run_id=self._run_id,
                       error=str(exc))
@@ -386,7 +393,7 @@ class BasePipeline(ABC):
 
         # Step 1 — non-emitting fast-path
         if not source_emits_graph_records(source_name):
-            log_event(self._logger, "source_non_emitting",
+            log_event(self._logger, event_name="source_non_emitting",
                       source_name=source_name, run_id=self._run_id)
             return SourceRunResult(
                 source_name=source_name,
@@ -487,7 +494,7 @@ class BasePipeline(ABC):
                 )
                 all_validation = all_validation + post_load
             except Exception as exc:
-                log_event(self._logger, "post_load_check_error",
+                log_event(self._logger, event_name="post_load_check_error",
                           source_name=source_name, error=str(exc))
 
             # Step 10 — advance checkpoint only on success
@@ -510,7 +517,7 @@ class BasePipeline(ABC):
             )
 
         except Exception as exc:
-            log_event(self._logger, "source_run_error",
+            log_event(self._logger, event_name="source_run_error",
                       source_name=source_name, run_id=self._run_id, error=str(exc))
             return SourceRunResult(
                 source_name=source_name,
@@ -562,7 +569,7 @@ class BasePipeline(ABC):
                 last_successful_run_id=self._run_id,
             )
         except Exception as exc:
-            log_event(self._logger, "checkpoint_advance_error",
+            log_event(self._logger, event_name="checkpoint_advance_error",
                       source_name=source_name, error=str(exc))
 
     # ── Filter / mode helpers ──────────────────────────────────────────────────
@@ -601,7 +608,7 @@ class BasePipeline(ABC):
     def _log_pipeline_started(self) -> None:
         log_event(
             self._logger,
-            "pipeline_started",
+            event_name="pipeline_started",
             pipeline_name=self.pipeline_name,
             run_id=self._run_id,
             dry_run=self._dry_run,
@@ -611,7 +618,7 @@ class BasePipeline(ABC):
     def _log_pipeline_finished(self, result: PipelineResult) -> None:
         log_event(
             self._logger,
-            "pipeline_finished",
+            event_name="pipeline_finished",
             pipeline_name=self.pipeline_name,
             run_id=self._run_id,
             status=result.status,

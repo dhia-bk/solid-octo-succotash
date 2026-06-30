@@ -111,6 +111,7 @@ class EconomyTransformer(BaseTransformer):
                 start_label=USER,
                 end_label=COIN_TRANSACTION,
                 properties={
+                    "event_id":    row.event_id,
                     "coin_amount": self._int(row.coin_amount),
                     "event_at":    self._ts(row.event_at_utc),
                 },

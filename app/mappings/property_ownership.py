@@ -601,7 +601,17 @@ PROPERTY_OWNERSHIP_SPECS: tuple[PropertyOwnershipSpec, ...] = (
     ),
     
     # PersonaState
-    
+
+    PropertyOwnershipSpec(
+        target_label_or_rel="PersonaState",
+        property_name="user_id",
+        owner_source="fct_user_behavior",
+        owner_priority=10,
+        write_policy=WRITE_POLICY_APPEND_HISTORY,
+        null_overwrite_allowed=False,
+        temporal=False,
+        notes="User FK stored on PersonaState so TemporalLoader can route CURRENT_STATE rotation.",
+    ),
     PropertyOwnershipSpec(
             target_label_or_rel="PersonaState",
             property_name="pcm_stage",

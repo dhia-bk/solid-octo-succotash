@@ -62,6 +62,7 @@ class PartnerRewardsTransformer(BaseTransformer):
     """
 
     source_name = CATALOG_SOURCE_NAME   # "dim_partner_reward_catalog"
+    secondary_sources = (INVENTORY_SOURCE_NAME, REDEMPTIONS_SOURCE_NAME)
     inclusion_mode = INCLUSION_MODE      # GRAPH_CORE
 
     def transform(self, batch: ExtractorBatch) -> GraphWriteBatch:

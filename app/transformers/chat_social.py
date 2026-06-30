@@ -57,6 +57,7 @@ class ChatSocialTransformer(BaseTransformer):
     """
 
     source_name = _CONV_SOURCE
+    secondary_sources = (_PAIRS_SOURCE,)
     inclusion_mode = CONV_INCLUSION_MODE  # GRAPH_CORE
 
     def transform(self, batch: ExtractorBatch) -> GraphWriteBatch:
@@ -170,6 +171,7 @@ class ChatSocialTransformer(BaseTransformer):
                     node_id,
                     start_label=USER,
                     end_label=DIRECT_PAIR,
+                    properties={"message_id": row.direct_pair_key},
                 )
             )
 

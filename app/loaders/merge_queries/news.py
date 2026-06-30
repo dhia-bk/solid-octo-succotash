@@ -15,12 +15,11 @@ def get_news_merge_query(source_name: str = "dim_news") -> str:
         merge_key_field="id",
         write_once_fields=["published_at"],
         mutable_fields=[
-            "headline",
-            "summary",
-            "source_name_news",
-            "source_url",
-            "language",
-            "sentiment_score",
-            "is_featured",
+            "title",
+            "content",
+            "author",
+            "url",
+            "image",
+            "is_active",
         ],
     )

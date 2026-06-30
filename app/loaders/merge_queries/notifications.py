@@ -20,18 +20,20 @@ def get_notification_content_merge_query(
 UNWIND $rows AS row
 MERGE (n:NotificationContent {id: row.id})
 ON CREATE SET
-    n.notification_type = row.notification_type,
-    n.title = row.title,
-    n.body = row.body,
-    n._created_at = row._created_at,
-    n._source_name = row._source_name,
-    n._run_id = row._run_id
+    n.normalized_message_text = row.normalized_message_text,
+    n.sender_user_id          = row.sender_user_id,
+    n.first_seen_at           = row.first_seen_at,
+    n.last_seen_at            = row.last_seen_at,
+    n._created_at             = row._created_at,
+    n._source_name            = row._source_name,
+    n._run_id                 = row._run_id
 ON MATCH SET
-    n.notification_type = row.notification_type,
-    n.title = row.title,
-    n._updated_at = row._updated_at,
-    n._source_name = row._source_name,
-    n._run_id = row._run_id
+    n.normalized_message_text = row.normalized_message_text,
+    n.sender_user_id          = row.sender_user_id,
+    n.last_seen_at            = row.last_seen_at,
+    n._updated_at             = row._updated_at,
+    n._source_name            = row._source_name,
+    n._run_id                 = row._run_id
 """.strip()
 
 

@@ -104,6 +104,8 @@ class PostsTransformer(BaseTransformer):
         properties = {
             "author_user_id": row.author_user_id,
             "title":          row.title,
+            "description":    row.description,
+            "content":        row.content,
             "published_at":   self._ts(row.published_at_utc),
             "like_count":     row.like_count,
             "view_count":     row.view_count,

@@ -163,6 +163,7 @@ class ActivitiesTransformer(BaseTransformer):
             start_label=USER,
             end_label=POST,
             properties={
+                "activity_id": row.activity_id,
                 "target_type": "Post",
                 "activity_at": self._ts(row.activity_at_utc),
             },
@@ -180,6 +181,7 @@ class ActivitiesTransformer(BaseTransformer):
             start_label=USER,
             end_label=COMMENT,
             properties={
+                "activity_id": row.activity_id,
                 "target_type": "Comment",
                 "activity_at": self._ts(row.activity_at_utc),
             },
@@ -196,7 +198,10 @@ class ActivitiesTransformer(BaseTransformer):
             build_poll_id(row.target_id),
             start_label=USER,
             end_label=POLL,
-            properties={"activity_at": self._ts(row.activity_at_utc)},
+            properties={
+                "activity_id": row.activity_id,
+                "activity_at": self._ts(row.activity_at_utc),
+            },
         )
 
     def _build_friended_rel(
@@ -210,5 +215,8 @@ class ActivitiesTransformer(BaseTransformer):
             build_user_id(row.target_id),
             start_label=USER,
             end_label=USER,
-            properties={"activity_at": self._ts(row.activity_at_utc)},
+            properties={
+                "activity_id": row.activity_id,
+                "activity_at": self._ts(row.activity_at_utc),
+            },
         )

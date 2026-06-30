@@ -103,67 +103,58 @@ class SourceInventoryRepository:
         """
         self._validate_source_name(source_name)
         self._validate_inclusion_mode(inclusion_mode)
-        self._validate_status(status)
 
-        created_or_updated_at = utc_now().isoformat()
+        import uuid as _uuid
+        now = utc_now().isoformat()
         normalized_key_fields = self._normalize_string_list(key_fields or [])
         normalized_graph_mappings = self._normalize_string_list(graph_entity_mappings or [])
-        sanitized_metadata = self._sanitize_payload(coverage_metadata or {})
 
         statement = f"""
         INSERT INTO {SOURCE_INVENTORY_TABLE} (
+            id,
             source_name,
-            domain,
             inclusion_mode,
+            graph_entity_mappings,
             freshness_field,
-            key_fields_json,
-            graph_entity_mappings_json,
-            status,
+            primary_keys,
+            domain,
             notes,
-            coverage_metadata_json,
-            created_at,
-            updated_at
+            registered_at,
+            last_seen_at
         )
         VALUES (
+            :id,
             :source_name,
-            :domain,
             :inclusion_mode,
+            :graph_entity_mappings,
             :freshness_field,
-            :key_fields_json,
-            :graph_entity_mappings_json,
-            :status,
+            :primary_keys,
+            :domain,
             :notes,
-            :coverage_metadata_json,
-            :created_at,
-            :updated_at
+            :registered_at,
+            :last_seen_at
         )
-        ON DUPLICATE KEY UPDATE
-            domain = VALUES(domain),
-            inclusion_mode = VALUES(inclusion_mode),
-            freshness_field = VALUES(freshness_field),
-            key_fields_json = VALUES(key_fields_json),
-            graph_entity_mappings_json = VALUES(graph_entity_mappings_json),
-            status = VALUES(status),
-            notes = VALUES(notes),
-            coverage_metadata_json = VALUES(coverage_metadata_json),
-            updated_at = VALUES(updated_at)
+        ON CONFLICT (source_name) DO UPDATE SET
+            inclusion_mode = EXCLUDED.inclusion_mode,
+            graph_entity_mappings = EXCLUDED.graph_entity_mappings,
+            freshness_field = EXCLUDED.freshness_field,
+            primary_keys = EXCLUDED.primary_keys,
+            domain = EXCLUDED.domain,
+            notes = EXCLUDED.notes,
+            last_seen_at = EXCLUDED.last_seen_at
         """
 
         params = {
+            "id": str(_uuid.uuid4()),
             "source_name": source_name.strip(),
-            "domain": self._normalize_optional_string(domain),
             "inclusion_mode": inclusion_mode,
+            "graph_entity_mappings": ",".join(normalized_graph_mappings) if normalized_graph_mappings else None,
             "freshness_field": self._normalize_optional_string(freshness_field),
-            "key_fields_json": json.dumps(normalized_key_fields, sort_keys=True),
-            "graph_entity_mappings_json": json.dumps(
-                normalized_graph_mappings,
-                sort_keys=True,
-            ),
-            "status": status,
+            "primary_keys": ",".join(normalized_key_fields) if normalized_key_fields else None,
+            "domain": self._normalize_optional_string(domain),
             "notes": self._normalize_optional_string(notes),
-            "coverage_metadata_json": json.dumps(sanitized_metadata, sort_keys=True),
-            "created_at": created_or_updated_at,
-            "updated_at": created_or_updated_at,
+            "registered_at": now,
+            "last_seen_at": now,
         }
 
         try:
@@ -220,15 +211,13 @@ class SourceInventoryRepository:
         statement = f"""
         UPDATE {SOURCE_INVENTORY_TABLE}
         SET
-            coverage_metadata_json = :coverage_metadata_json,
-            updated_at = :updated_at
+            last_seen_at = :last_seen_at
         WHERE source_name = :source_name
         """
 
         params = {
             "source_name": source_name.strip(),
-            "coverage_metadata_json": json.dumps(merged_metadata, sort_keys=True),
-            "updated_at": updated_at,
+            "last_seen_at": updated_at,
         }
 
         try:
@@ -302,13 +291,11 @@ class SourceInventoryRepository:
             domain,
             inclusion_mode,
             freshness_field,
-            key_fields_json,
-            graph_entity_mappings_json,
-            status,
+            primary_keys,
+            graph_entity_mappings,
             notes,
-            coverage_metadata_json,
-            created_at,
-            updated_at
+            registered_at,
+            last_seen_at
         FROM {SOURCE_INVENTORY_TABLE}
         WHERE source_name = :source_name
         LIMIT 1
@@ -365,9 +352,7 @@ class SourceInventoryRepository:
             filters.append("inclusion_mode = :inclusion_mode")
             params["inclusion_mode"] = inclusion_mode
 
-        if status is not None:
-            filters.append("status = :status")
-            params["status"] = status
+        # status column does not exist in actual table schema; filter ignored
 
         where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
         limit_clause = "LIMIT :limit" if limit is not None else ""
@@ -381,13 +366,11 @@ class SourceInventoryRepository:
             domain,
             inclusion_mode,
             freshness_field,
-            key_fields_json,
-            graph_entity_mappings_json,
-            status,
+            primary_keys,
+            graph_entity_mappings,
             notes,
-            coverage_metadata_json,
-            created_at,
-            updated_at
+            registered_at,
+            last_seen_at
         FROM {SOURCE_INVENTORY_TABLE}
         {where_clause}
         ORDER BY domain ASC, source_name ASC
@@ -517,18 +500,23 @@ class SourceInventoryRepository:
                 return value.isoformat()
             return str(value)
 
+        def _split_csv(value: Any) -> list[str]:
+            if not value:
+                return []
+            return [v.strip() for v in str(value).split(",") if v.strip()]
+
         return SourceInventoryRecord(
             source_name=str(row["source_name"]),
             domain=row.get("domain"),
             inclusion_mode=str(row["inclusion_mode"]),
             freshness_field=row.get("freshness_field"),
-            key_fields=cls._decode_json_list(row.get("key_fields_json")),
-            graph_entity_mappings=cls._decode_json_list(row.get("graph_entity_mappings_json")),
-            status=row.get("status"),
+            key_fields=_split_csv(row.get("primary_keys")),
+            graph_entity_mappings=_split_csv(row.get("graph_entity_mappings")),
+            status=None,
             notes=row.get("notes"),
-            coverage_metadata=cls._decode_json_dict(row.get("coverage_metadata_json")),
-            updated_at=_iso(row.get("updated_at")),
-            created_at=_iso(row.get("created_at")),
+            coverage_metadata={},
+            updated_at=_iso(row.get("last_seen_at")),
+            created_at=_iso(row.get("registered_at")),
         )
 
     @staticmethod

@@ -130,7 +130,6 @@ class MetadataDBClient:
                 pool_size=self._settings.pool_size,
                 max_overflow=self._settings.max_overflow,
                 pool_recycle=3600,
-                connect_args={"connect_timeout": self._settings.connect_timeout},
                 future=True,
             )
 
@@ -145,7 +144,6 @@ class MetadataDBClient:
                 password=mask_secret(self._settings.password),
                 pool_size=self._settings.pool_size,
                 max_overflow=self._settings.max_overflow,
-                connect_timeout=self._settings.connect_timeout,
             )
             return engine
         except Exception as exc:  # noqa: BLE001
@@ -159,16 +157,14 @@ class MetadataDBClient:
 
     def _build_sqlalchemy_url(self) -> str:
         """
-        Build the SQLAlchemy connection URL for the metadata DB.
-
-        Assumes MySQL-compatible metadata storage via PyMySQL.
+        Build the SQLAlchemy connection URL for the metadata DB (PostgreSQL).
         """
         user = self._settings.user
         password = self._settings.password
         host = self._settings.host
         port = self._settings.port
         database = self._settings.name
-        return f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}"
+        return f"postgresql+psycopg://{user}:{password}@{host}:{port}/{database}"
 
     @contextmanager
     def session(self) -> Iterator[Session]:

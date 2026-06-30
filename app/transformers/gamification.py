@@ -71,6 +71,7 @@ class GamificationTransformer(BaseTransformer):
     """
 
     source_name = POLLS_SOURCE_NAME   # "dim_fixture_polls_enhanced"
+    secondary_sources = (QUESTIONS_SOURCE_NAME, QUESTIONS_ENHANCED_SOURCE_NAME, QUIZZES_SOURCE_NAME, QUIZ_QUESTIONS_SOURCE_NAME)
     inclusion_mode = INCLUSION_MODE    # GRAPH_CORE
 
     def transform(self, batch: ExtractorBatch) -> GraphWriteBatch:

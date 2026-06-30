@@ -82,7 +82,7 @@ class IncrementalPipeline:
 
         log_event(
             self._logger,
-            "incremental_pipeline_started",
+            event_name="incremental_pipeline_started",
             run_id=self._run_id,
             wave_count=len(PIPELINE_EXECUTION_ORDER),
         )
@@ -94,14 +94,14 @@ class IncrementalPipeline:
                 if halted:
                     log_event(
                         self._logger,
-                        "wave_skipped_halted",
+                        event_name="wave_skipped_halted",
                         wave=wave_idx,
                         pipelines=wave,
                     )
                     continue
 
                 log_event(
-                    self._logger, "wave_started",
+                    self._logger, event_name="wave_started",
                     wave=wave_idx, pipelines=wave,
                 )
 
@@ -111,21 +111,21 @@ class IncrementalPipeline:
                 failed = [n for n, r in wave_results.items() if r.status == "failed"]
                 if failed:
                     log_event(
-                        self._logger, "wave_critical_failure",
+                        self._logger, event_name="wave_critical_failure",
                         wave=wave_idx, failed_pipelines=failed,
                     )
                     halted = True
                     final_status = "failed"
 
                 log_event(
-                    self._logger, "wave_finished",
+                    self._logger, event_name="wave_finished",
                     wave=wave_idx,
                     statuses={n: r.status for n, r in wave_results.items()},
                 )
 
         except Exception as exc:
             final_status = "failed"
-            log_event(self._logger, "incremental_pipeline_error",
+            log_event(self._logger, event_name="incremental_pipeline_error",
                       run_id=self._run_id, error=str(exc))
 
         finally:
@@ -140,7 +140,7 @@ class IncrementalPipeline:
                 )
             log_event(
                 self._logger,
-                "incremental_pipeline_finished",
+                event_name="incremental_pipeline_finished",
                 run_id=self._run_id,
                 status=final_status,
                 duration_seconds=perf_counter() - started,
@@ -167,7 +167,7 @@ class IncrementalPipeline:
                 cp.source_name: cp.watermark_value for cp in existing
             }
         except Exception as exc:
-            log_event(self._logger, "due_for_refresh_error", error=str(exc))
+            log_event(self._logger, event_name="due_for_refresh_error", error=str(exc))
             return due
 
         for decl in SOURCE_ARTIFACT_DECLARATIONS:
