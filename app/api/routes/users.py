@@ -59,40 +59,49 @@ def _build_subgraph_dot(subgraph: UserSubgraphDTO) -> str:
 def _build_user_subgraph(user_id: str, client: Any) -> UserSubgraphDTO:
     canonical_user_id = build_user_id(user_id)
 
-    query = """
-    MATCH (u:User {id: $user_id})
-    MATCH p=(u)-[*1..100]-(n)
-    WITH collect(DISTINCT nodes(p)) AS node_lists, collect(DISTINCT relationships(p)) AS rel_lists
-    UNWIND node_lists AS node_list
-    UNWIND node_list AS node
-    WITH collect(DISTINCT {id: coalesce(node.id, elementId(node)), labels: labels(node), properties: properties(node)}) AS nodes, rel_lists
-    UNWIND rel_lists AS rel_list
-    UNWIND rel_list AS rel
-    WITH nodes,
-         collect(DISTINCT {
-           source: coalesce(startNode(rel).id, elementId(startNode(rel))),
-           target: coalesce(endNode(rel).id, elementId(endNode(rel))),
-           type: type(rel),
-           properties: properties(rel)
-         }) AS edges
-    RETURN nodes, edges
+    user_record = client.fetch_one(
+        """
+        MATCH (u:User {id: $user_id})
+        RETURN labels(u) AS labels, properties(u) AS properties
+        """,
+        {"user_id": canonical_user_id},
+    )
+    if user_record is None:
+        raise HTTPException(status_code=404, detail=f"User '{canonical_user_id}' not found")
+
+    # Direct (1-hop) neighbors only. A variable-length traversal here would
+    # flood-fill through hub nodes (e.g. leagues with thousands of members)
+    # and can exhaust the server's transaction memory on well-connected users.
+    subgraph_query = """
+    MATCH (u:User {id: $user_id})-[rel]-(n)
+    RETURN
+      collect(DISTINCT {id: coalesce(n.id, elementId(n)), labels: labels(n), properties: properties(n)}) AS nodes,
+      collect(DISTINCT {
+        source: coalesce(startNode(rel).id, elementId(startNode(rel))),
+        target: coalesce(endNode(rel).id, elementId(endNode(rel))),
+        type: type(rel),
+        properties: properties(rel)
+      }) AS edges
     """
 
-    records = client.fetch_all(query, {"user_id": canonical_user_id})
+    records = client.fetch_all(subgraph_query, {"user_id": canonical_user_id})
     payload = records[0] if records else {"nodes": [], "edges": []}
 
-    nodes: list[GraphNodeDTO] = [
-        GraphNodeDTO(id=canonical_user_id, labels=["User"]),
-        *[
-            GraphNodeDTO(
-                id=str(node.get("id", "")),
-                labels=list(node.get("labels", []) or []),
-                properties=dict(node.get("properties", {}) or {}),
-            )
-            for node in payload.get("nodes", []) or []
-            if str(node.get("id", "")) != canonical_user_id
-        ],
-    ]
+    nodes_by_id: dict[str, GraphNodeDTO] = {
+        canonical_user_id: GraphNodeDTO(
+            id=canonical_user_id,
+            labels=list(user_record.get("labels", []) or []),
+            properties=dict(user_record.get("properties", {}) or {}),
+        ),
+    }
+    for node in payload.get("nodes", []) or []:
+        node_id = str(node.get("id", ""))
+        nodes_by_id[node_id] = GraphNodeDTO(
+            id=node_id,
+            labels=list(node.get("labels", []) or []),
+            properties=dict(node.get("properties", {}) or {}),
+        )
+
     edges: list[GraphEdgeDTO] = [
         GraphEdgeDTO(
             source=str(edge.get("source", "")),
@@ -103,7 +112,7 @@ def _build_user_subgraph(user_id: str, client: Any) -> UserSubgraphDTO:
         for edge in payload.get("edges", []) or []
     ]
 
-    return UserSubgraphDTO(user_id=canonical_user_id, nodes=nodes, edges=edges)
+    return UserSubgraphDTO(user_id=canonical_user_id, nodes=list(nodes_by_id.values()), edges=edges)
 
 
 @router.get("/{user_id}/subgraph")
