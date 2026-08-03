@@ -1,6 +1,13 @@
 PYTHON := .venv/bin/python3
 PIP := pip
 
+# Give locally-run targets the same env vars docker-compose gives the
+# api/worker containers via `env_file: .env` (MYSQL_*, NEO4J_*, METADATA_DB_*, ...).
+ifneq (,$(wildcard .env))
+include .env
+export
+endif
+
 .PHONY: setup format lint test run-api run-backfill run-sync run-leiden migrate-neo4j migrate-metadata up down
 
 setup:
@@ -20,7 +27,7 @@ test:
 	$(PYTHON) -m pytest
 
 run-api:
-	$(PYTHON) -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+	$(PYTHON) -m uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
 
 run-backfill:
 	$(PYTHON) scripts/run_full_backfill.py
